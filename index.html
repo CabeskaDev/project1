@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countries Table</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .search-container {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-container text {
+            margin-right: 10px;
+        }
+
+        .search-container input[type="text"] {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .table-container::-webkit-scrollbar {
+            width: 20px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f0f0f0;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background-color: #a0a0a0;
+            border-radius: 4px;
+            border: 2px solid #f0f0f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        td img {
+            max-width: 50px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        button {
+            background-color: #026eeb;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #103647;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>All Countries Details</h1>
+        <div class="search-container">
+            <label for="searchInput">Search</label>
+            <input type="text" id="searchInput" oninput="searchingBar()" placeholder="Enter country name...">
+        </div>
+        <button id="sortPopulationBtn">Sort by Population</button>
+        <button id="sortAreaBtn">Sort by Area</button>
+        <div class="table-container">
+            <table id="countryTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Capital</th>
+                        <th>Region</th>
+                        <th>Population</th>
+                        <th>Area</th>
+                        <th>C.Code</th>
+                        <th>Flags</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let originalCountriesData = [];
+        let filteredCountriesData = [];
+
+        async function fetchData() {
+            const response = await fetch('https://restcountries.com/v3.1/all');
+            const countries = await response.json();
+            return countries;
+        }
+
+        function countryTable(countries) {
+            const tableBody = document.getElementById('countryTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+
+            countries.forEach(country => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${country.name.common}</td>
+                    <td>${country.capital ? country.capital[0] : 'N/A'}</td>
+                    <td>${country.region}</td>
+                    <td>${country.population}</td>
+                    <td>${country.area}</td>
+                    <td>${country.cca2}</td>
+                    <td><img src="${country.flags.png}" alt="${country.name.common} Flag"></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function sortTableByPopulation() {
+            filteredCountriesData.sort((a, b) => a.population - b.population);
+            countryTable(filteredCountriesData);
+        }
+
+        function sortTableByArea() {
+            filteredCountriesData.sort((a, b) => a.area - b.area);
+            countryTable(filteredCountriesData);
+        }
+
+        function searchingBar() {
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (searchTerm === '') {
+                countryTable(originalCountriesData);
+                filteredCountriesData = [...originalCountriesData];
+            } else {
+                filteredCountriesData = originalCountriesData.filter(country =>
+                    country.name.common.toLowerCase().includes(searchTerm)
+                );
+                countryTable(filteredCountriesData);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const countries = await fetchData();
+            originalCountriesData = countries;
+            filteredCountriesData = [...countries];
+            countryTable(countries);
+
+            const sortPopulationBtn = document.getElementById('sortPopulationBtn');
+            sortPopulationBtn.addEventListener('click', sortTableByPopulation);
+
+            const sortAreaBtn = document.getElementById('sortAreaBtn');
+            sortAreaBtn.addEventListener('click', sortTableByArea);
+        });
+    </script>
+</body>
+</html>
